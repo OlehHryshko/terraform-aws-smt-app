@@ -60,7 +60,6 @@ module "rds_db_instance" {
   source  = "terraform-aws-modules/rds/aws//modules/db_instance"
   version = "5.2.1"
 
-  #family               = "${var.environment.name}-smt-rds"
   identifier           = "${var.environment.name}-smt"
   allocated_storage    = var.db.allocated_storage
   storage_type         = var.db.storage_type
@@ -89,7 +88,6 @@ module "zones" {
   source  = "terraform-aws-modules/route53/aws//modules/zones"
   version = "~> 2.0"
 
-  #family               = "${var.environment.name}-smt-route53"
   zones = {
     "smt1.com" = {
       comment           = "smt1.com"
