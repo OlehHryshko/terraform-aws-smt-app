@@ -1,31 +1,6 @@
-provider "aws" {
-  profile   = "default"
-}
-
-// Generate Password
-resource "random_string" "rds_password" {
-  length           = 12
-  special          = true
-  override_special = "!#$&"
-
-  keepers = {
-    kepeer1 = var.db.name_db_admininstrator
-  }
-}
-
-// Store Password in SSM Parameter Store
-resource "aws_ssm_parameter" "rds_password" {
-  name        = "/${var.environment.name}/postgres"
-  description = "Master Password for RDS Postgres"
-  type        = "SecureString"
-  value       = random_string.rds_password.result
-}
-
-// Get Password from SSM Parameter Store
-data "aws_ssm_parameter" "postgres_rds_password" {
-  name       = "/${var.environment.name}/postgres"
-  depends_on = [aws_ssm_parameter.rds_password]
-}
+#provider "aws" {
+#  profile   = "default"
+#}
 
 module "app_vpc" {
   source = "terraform-aws-modules/vpc/aws"
@@ -33,7 +8,7 @@ module "app_vpc" {
   name = var.environment.name
   cidr = "${var.environment.network_prefix}.0.0/16"
 
-  azs             = ["us-west-2a","us-west-2b","us-west-2c"]
+  azs             = ["${data.aws_region.current.name}a", "${data.aws_region.current.name}b", "${data.aws_region.current.name}c"]
   public_subnets  = ["${var.environment.network_prefix}.101.0/24", "${var.environment.network_prefix}.102.0/24", "${var.environment.network_prefix}.103.0/24"]
 
   enable_nat_gateway = true
