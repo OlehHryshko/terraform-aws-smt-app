@@ -1,7 +1,3 @@
-#provider "aws" {
-#  profile   = "default"
-#}
-
 module "app_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -21,20 +17,21 @@ module "app_vpc" {
 
 module "app_sg" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "4.13.0"
+  version = "4.16.2"
 
   vpc_id  = module.app_vpc.vpc_id
   name    = "${var.environment.name}-smt"
-  ingress_rules = ["https-443-tcp","http-80-tcp"]
+  ingress_rules = ["https-443-tcp", "http-80-tcp", "postgresql-tcp"]
   ingress_cidr_blocks = ["0.0.0.0/0"]
   egress_rules = ["all-all"]
   egress_cidr_blocks = ["0.0.0.0/0"]
 }
 
 module "rds_db_instance" {
-  source  = "terraform-aws-modules/rds/aws//modules/db_instance"
-  version = "5.2.1"
+  source  = "terraform-aws-modules/rds/aws"
+  version = "5.2.2"
 
+  family               = "${var.db.engine}${var.db.engine_version}"
   identifier           = "${var.environment.name}-smt"
   allocated_storage    = var.db.allocated_storage
   storage_type         = var.db.storage_type
@@ -46,58 +43,6 @@ module "rds_db_instance" {
   password             = data.aws_ssm_parameter.postgres_rds_password.value
   skip_final_snapshot  = true
   apply_immediately    = true
-}
-
-module "delegation_sets" {
-  source  = "terraform-aws-modules/route53/aws//modules/delegation-sets"
-  version = "~> 2.0"
-
-  delegation_sets = {
-    "smt" = {
-      reference_name = "smt"
-    }
-  }
-}
-
-module "zones" {
-  source  = "terraform-aws-modules/route53/aws//modules/zones"
-  version = "~> 2.0"
-
-  zones = {
-    "smt1.com" = {
-      comment           = "smt1.com"
-      delegation_set_id = module.delegation_sets.route53_delegation_set_id["smt"]
-    }
-
-    "smt2.com" = {
-      comment           = "smt2.com"
-      delegation_set_id = module.delegation_sets.route53_delegation_set_id["smt"]
-    }
-  }
-
-  tags = {
-    ManagedBy = "Terraform"
-  }
-
-  depends_on = [module.delegation_sets]
-}
-
-module "resolver_rule_associations" {
-  source  = "terraform-aws-modules/route53/aws//modules/resolver-rule-associations"
-  version = "~> 2.0"
-
-  vpc_id = "vpc-185a3e2f2d6d2c863"
-
-  resolver_rule_associations = {
-    foo = {
-      resolver_rule_id = "rslvr-rr-2d3e8e42eea14f20a"
-    },
-    bar = {
-      name             = "bar"
-      resolver_rule_id = "rslvr-rr-2d3e8e42eea14f20a"
-      vpc_id           = "vpc-285a3e2f2d6d2c863"
-    },
-  }
 }
 
 #data "aws_ami" "app_ami" {
@@ -116,7 +61,7 @@ module "resolver_rule_associations" {
 #  owners = [var.ami_filter.owner]
 #}
 #
-#module "blog_autoscaling" {
+#module "app_autoscaling" {
 #  source  = "terraform-aws-modules/autoscaling/aws"
 #  version = "6.5.2"
 #
