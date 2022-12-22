@@ -39,11 +39,50 @@ module "rds_db_instance" {
   port                 = var.db.port
   engine_version       = var.db.engine_version
   instance_class       = var.db.instance_class
-  username             = var.db.name_db_admininstrator
+  username             = var.db.name_db_administrator
   password             = data.aws_ssm_parameter.postgres_rds_password.value
   skip_final_snapshot  = true
   apply_immediately    = true
 }
+
+module "ecs" {
+  source = "terraform-aws-modules/ecs/aws"
+
+  cluster_name = "${var.environment.name}-smt"
+
+  cluster_configuration = {
+    execute_command_configuration = {
+      logging = "OVERRIDE"
+      log_configuration = {
+        # You can set a simple string and ECS will create the CloudWatch log group for you
+        # or you can create the resource yourself as shown here to better manage retetion, tagging, etc.
+        # Embedding it into the module is not trivial and therefore it is externalized
+        cloud_watch_log_group_name = aws_cloudwatch_log_group.this.name
+      }
+    }
+  }
+
+  # Capacity provider
+  fargate_capacity_providers = {
+    FARGATE = {
+      default_capacity_provider_strategy = {
+        weight = 50
+        base   = 20
+      }
+    }
+    FARGATE_SPOT = {
+      default_capacity_provider_strategy = {
+        weight = 50
+      }
+    }
+  }
+
+  tags = {
+    Name       = "${var.environment.name}-smt"
+    Environment = var.environment.name
+  }
+}
+
 
 #data "aws_ami" "app_ami" {
 #  most_recent = true

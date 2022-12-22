@@ -5,7 +5,7 @@ resource "random_string" "rds_password" {
   override_special = "!#$&"
 
   keepers = {
-    kepeer1 = var.db.name_db_admininstrator
+    kepeer1 = var.db.name_db_administrator
   }
 }
 
@@ -15,4 +15,13 @@ resource "aws_ssm_parameter" "rds_password" {
   description = "Master Password for RDS Postgres"
   type        = "SecureString"
   value       = random_string.rds_password.result
+}
+
+resource "aws_cloudwatch_log_group" "this" {
+  name              = "/aws/ecs/smt"
+  retention_in_days = 7
+
+  tags = {
+    Name       = "smt"
+  }
 }

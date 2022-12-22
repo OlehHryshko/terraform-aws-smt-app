@@ -44,7 +44,7 @@ variable "db" {
   description = "postgres"
 
   type = object({
-    name_db_admininstrator = string
+    name_db_administrator  = string
     storage_type           = string
     instance_class         = string
     engine                 = string
@@ -54,7 +54,7 @@ variable "db" {
   })
 
   default = {
-    name_db_admininstrator   = "admininstrator"
+    name_db_administrator   = "administrator"
     storage_type             = "gp2"
     instance_class           = "db.t3.micro"
     engine                   = "postgres"
@@ -63,3 +63,4 @@ variable "db" {
     port                    = 5432
   }
 }
+

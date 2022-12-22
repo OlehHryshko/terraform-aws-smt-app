@@ -1,3 +1,4 @@
+// Get current AWS region
 data "aws_region" "current" {}
 
 // Get Password from SSM Parameter Store
