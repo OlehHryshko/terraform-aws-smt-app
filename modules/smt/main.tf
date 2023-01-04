@@ -15,17 +15,19 @@ module "app_vpc" {
   }
 }
 
+
 module "app_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "4.16.2"
 
   vpc_id  = module.app_vpc.vpc_id
   name    = "${var.environment.name}-smt"
-  ingress_rules = ["https-443-tcp", "http-80-tcp", "postgresql-tcp"]
+  ingress_rules = ["https-443-tcp", "http-80-tcp", "postgresql-tcp", "ssh-tcp"]
   ingress_cidr_blocks = ["0.0.0.0/0"]
   egress_rules = ["all-all"]
   egress_cidr_blocks = ["0.0.0.0/0"]
 }
+
 
 module "rds_db_instance" {
   source  = "terraform-aws-modules/rds/aws"
